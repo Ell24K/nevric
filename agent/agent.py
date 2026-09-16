@@ -8,7 +8,7 @@ import random
 import sys
 import os
 
-SERVER_URL = "https://neverix-production-0c07.up.railway.app"
+SERVER_URL = "https://nevric-production.up.railway.app"
 
 sio = socketio.Client(reconnection=True, reconnection_attempts=0)
 pc_id = "UNKNOWN"

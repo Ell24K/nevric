@@ -1,0 +1,3 @@
+python-socketio[client]==5.13.0
+pyautogui
+pyinstaller
